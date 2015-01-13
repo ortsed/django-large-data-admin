@@ -1,4 +1,5 @@
 {% load i18n %}
+
 <script>
     if(!window.jQuery) {
         window.jQuery = django.jQuery;
@@ -23,7 +24,8 @@ function perform_request(id, url, model, field, filter_query, exclude_query, cal
 }
 
 function select_input(id, url, model, field, filter_query, exclude_query, min_length, callback){
-    $("#"+id).keyup(function() {
+    $("#"+id).keypress(function(e) {
+	if(e.which == 13) {
         if ($("#"+id).val().length > min_length - 1){
             $("#"+id+"_list").empty();
             var fields = field.split(',');
@@ -31,6 +33,7 @@ function select_input(id, url, model, field, filter_query, exclude_query, min_le
                 perform_request(id, url, model, $.trim(field), filter_query.replace('INPUT_VALUE', $("#"+id).val()).replace('FIELD_NAME', $.trim(field)), exclude_query.replace('INPUT_VALUE', $("#"+id).val()).replace('FIELD_NAME', $.trim(field)), callback);
             });
         }
+	}
     })
 }
 
