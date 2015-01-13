@@ -1,7 +1,6 @@
 import urllib, json
 
 from django.http import HttpResponse
-from django.utils import simplejson
 from django.template.defaultfilters import slugify
 from django.shortcuts import render_to_response, render
 from django.conf import settings
@@ -37,7 +36,7 @@ def get_json(request):
 
     if unique:
         try:  # XXX: needs prety check if DISTINCT is available, ticket #3
-            return HttpResponse(simplejson.dumps(list(qs.distinct(field).values_list("pk", field).order_by(field))))
+            return HttpResponse(json.dumps(list(qs.distinct(field).values_list("pk", field).order_by(field))))
         except NotImplementedError:
             data = []
             unique_by_field = []
@@ -45,9 +44,9 @@ def get_json(request):
                 if field_value not in unique_by_field:
                     data.append((pk, field_value))
                 unique_by_field.append(field_value)
-            return HttpResponse(simplejson.dumps(data))
+            return HttpResponse(json.dumps(data))
 
-    return HttpResponse(simplejson.dumps(list(qs.values_list("pk", field))))
+    return HttpResponse(json.dumps(list(qs.values_list("pk", field))))
 
 def m2m_list_view(request, model_str):
     pks = [int(pk) for pk in filter(None, request.GET.get("q", "").split(","))]
