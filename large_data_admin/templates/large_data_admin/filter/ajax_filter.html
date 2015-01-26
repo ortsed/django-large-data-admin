@@ -9,43 +9,54 @@
 <script type="text/javascript">
 function perform_request(id, url, model, field, filter_query, exclude_query, callback){
     uri = url+"?query="+$("#"+id).val()+"&model="+model+"&field="+field+"&filter_query="+filter_query+"&exclude_query="+exclude_query+"&unique=true";
-    console.log(uri)
-    $.get(uri, function (data){
+    
+    $("#"+id+"_list").html('<img src="/static/large_data_admin/img/ajax-loader.gif" style="display:block;margin:10px auto;" />');
+    $.get(uri, {}, function (data){
         data = JSON.parse(data);
-        data.forEach(function (i) {
-            $("#"+id+"_list").append("<li><a href=\"?"+field+"="+i[1].replace("&", "%26").replace("%27", "'").replace("%22", '"')+"\" >"+i[1]+"</a></li>");
-            $("#"+id+i[0]).click(function(){
-                $("#"+id+"_list").empty();
-                $("#"+id).val("");
-                callback(i);
-            })
+        $("#"+id+"_list").find('img').remove();
+	data.forEach(function (i) {
+		$("#"+id+"_list").append("<li><a href=\"?"+field+"="+i[1].replace("&", "%26").replace("%27", "'").replace("%22", '"')+"\" >"+i[1]+"</a></li>");
         })
     })
 }
 
+
+
 function select_input(id, url, model, field, filter_query, exclude_query, min_length, callback){
-    $("#"+id).keypress(function(e) {
-	if(e.which == 13) {
-        if ($("#"+id).val().length > min_length - 1){
-            $("#"+id+"_list").empty();
-            var fields = field.split(',');
-            fields.forEach(function(field) {
-                perform_request(id, url, model, $.trim(field), filter_query.replace('INPUT_VALUE', $("#"+id).val()).replace('FIELD_NAME', $.trim(field)), exclude_query.replace('INPUT_VALUE', $("#"+id).val()).replace('FIELD_NAME', $.trim(field)), callback);
-            });
+	if ($("#" + id + "_add").val().length > min_length - 1){
+        	$("#" + id + "_add"+"_list").empty();
+            	var fields = field.split(',');
+            	fields.forEach(function(field) {
+			perform_request(id + "_add", url, model, $.trim(field), filter_query.replace('INPUT_VALUE', $("#" + id + "_add").val()).replace('FIELD_NAME', $.trim(field)), exclude_query.replace('INPUT_VALUE', $("#"+ id + "_add").val()).replace('FIELD_NAME', $.trim(field)), callback);
+            	});
         }
-	}
-    })
+}
+
+
+function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 $(document).ready(function(){
-
-    select_input("{{spec.random}}_add", "/large_data_admin/get/", "{{spec.model}}", "{{spec.field}}", "{{spec.filter_query}}", "{{spec.exclude_query}}", 2, function (i){
-    });
-})
+        $("#{{spec.random}}").submit(function(e) {
+		e.preventDefault();
+		
+    		select_input("{{spec.random}}", "/large_data_admin/get/", "{{spec.model}}", "{{spec.field}}", "{{spec.filter_query}}", "{{spec.exclude_query}}", 2, function (i){
+		});
+	});
+	
+	$("#{{ spec.random }}_add").val(getParameterByName('uindate') || getParameterByName('name_last') || getParameterByName('name_first'));
+});
 </script>
+<form id="{{ spec.random }}">
+	<h3 style="padding-left:5px;">{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
 
-<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
-<input type="text" id="{{spec.random}}_add">
-<a onclick="$('#{{spec.random}}_add_list').html('');$('#{{spec.random}}_add').val('')">x</a>
-<ul id="{{spec.random}}_add_list">
-</ul>
+	<input type="text" value="" id="{{spec.random}}_add" style="margin-left:5px;"><button type="submit" class="button" title="Run the selected action" name="index" value="0" style="padding: 2px 2px 3px 2px;">Go</button>
+
+	<ul id="{{spec.random}}_add_list" style="margin-left:5px;"></ul>
+
+	<b><a href="?" style="margin-left:5px;">x Clear Results</a></b>
+</form>
