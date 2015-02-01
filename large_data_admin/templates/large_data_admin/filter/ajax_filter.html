@@ -13,10 +13,15 @@ function perform_request(id, url, model, field, filter_query, exclude_query, cal
     $("#"+id+"_list").html('<img src="/static/large_data_admin/img/ajax-loader.gif" style="display:block;margin:10px auto;" />');
     $.get(uri, {}, function (data){
         data = JSON.parse(data);
-        $("#"+id+"_list").find('img').remove();
-	data.forEach(function (i) {
+	if (data.length > 0 ){
+	   $("#"+id+"_list").find('img').remove(); 
+	   data.forEach(function (i) {
 		$("#"+id+"_list").append("<li><a href=\"?"+field+"="+i[1].replace("&", "%26").replace("%27", "'").replace("%22", '"')+"\" >"+i[1]+"</a></li>");
-        })
+        });
+	}else {
+                $("#"+id+"_list").find('img').remove();
+		$("#"+id+"_list").text("No results");
+	}
     })
 }
 
