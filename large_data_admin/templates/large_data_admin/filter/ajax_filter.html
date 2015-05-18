@@ -27,10 +27,14 @@ function perform_request(id, url, model, fields, filter_query, exclude_query, ca
 
 
 
-function select_input(id, url, model, field, filter_query, exclude_query, min_length, callback){
+function select_input(id, url, model, fields, filter_query, exclude_query, min_length, callback){
 	if ($("#" + id + "_add").val().length > min_length - 1){
         	$("#" + id + "_add"+"_list").empty();
-		perform_request(id + "_add", url, model, field, filter_query.replace('INPUT_VALUE', $("#" + id + "_add").val()).replace('FIELD_NAME', $.trim(field)), exclude_query.replace('INPUT_VALUE', $("#"+ id + "_add").val()).replace('FIELD_NAME', $.trim(field)), callback);
+		var field_list = '';
+		for (field in fields.split(',')){
+			field_list += $.trim(fields[field]);
+		}
+		perform_request(id + "_add", url, model, field_list, filter_query.replace('INPUT_VALUE', $("#" + id + "_add").val()).replace('FIELD_NAME', $.trim(fields)), exclude_query.replace('INPUT_VALUE', $("#"+ id + "_add").val()).replace('FIELD_NAME', $.trim(fields)), callback);
         }
 }
 
