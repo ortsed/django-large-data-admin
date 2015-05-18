@@ -4,12 +4,14 @@ from django.http import HttpResponse
 from django.template.defaultfilters import slugify
 from django.shortcuts import render_to_response, render
 from django.conf import settings
+from django.db.models import Q
+from operator import __or__ as OR
 
 from helpers import get_model
 
 def get_json(request):
     model_str = request.GET.get("model")
-    field = request.GET.get("field")
+    fields = request.GET.get("field").split(",")
     query = urllib.unquote(request.GET.get("query", ""))
     exclude = filter(None, request.GET.get("exclude", "").split(","))
     fromlist = filter(None, request.GET.get("fromlist", "").split(","))
@@ -26,13 +28,14 @@ def get_json(request):
     Model = get_model(model_str)
 
     if (len(filter_query) + len(exclude_query)) == 0:
-        filter_query = {"%s__icontains"%field: query}
+        filter_query = [Q(**{"%s__icontains"%field: query}) for field in fields]
+        #filter_query = {"%s__icontains"%field: query}
         exclude_query = {"pk__in": exclude}
 
     if fromlist:
         filter_query.update({"pk__in": fromlist })
 
-    qs = Model.objects.filter(**filter_query).exclude(**exclude_query)
+    qs = Model.objects.filter(reduce(OR, filter_query)).exclude(**exclude_query)
 
     if unique:
         try:  # XXX: needs prety check if DISTINCT is available, ticket #3
@@ -46,7 +49,7 @@ def get_json(request):
                 unique_by_field.append(field_value)
             return HttpResponse(json.dumps(data))
 
-    return HttpResponse(json.dumps(list(qs.values_list("pk", field))))
+    return HttpResponse(json.dumps(list(qs.values_list("pk", fields))))
 
 def m2m_list_view(request, model_str):
     pks = [int(pk) for pk in filter(None, request.GET.get("q", "").split(","))]
