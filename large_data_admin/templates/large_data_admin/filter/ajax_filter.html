@@ -1,4 +1,5 @@
 {% load i18n %}
+
 <script>
     if(!window.jQuery) {
         window.jQuery = django.jQuery;
@@ -6,35 +7,40 @@
     }
 </script>
 <script type="text/javascript">
-function perform_request(id, url, model, fields, filter_query, exclude_query, callback){
-	  
-    uri = url + "?query=" + $("#"+id).val() + "&model=" + model + "&field=" + fields + "&filter_query=" + filter_query + "&exclude_query=" + exclude_query + "&unique=true";
-    
+function perform_request(id, url, model, field, filter_query, exclude_query, callback){
+    uri = url+"?query="+$("#"+id).val()+"&model="+model+"&field="+field+"&filter_query="+filter_query+"&exclude_query="+exclude_query+"&unique=true";
+
+
+    $( document ).ajaxComplete(function() {
+        $("#"+id+"_list").find('img').remove();
+	setTimeout(function(){
+	if ($("#"+id+"_list").text().length == 0){
+		$("#"+id+"_list").text("No results");
+	}
+	}, 500);
+    });
+
+ 
     $("#"+id+"_list").html('<img src="/static/large_data_admin/img/ajax-loader.gif" style="display:block;margin:10px auto;" />');
     $.get(uri, {}, function (data){
         data = JSON.parse(data);
 	if (data.length > 0 ){
-	   $("#"+id+"_list").find('img').remove(); 
 	   data.forEach(function (i) {
 		$("#"+id+"_list").append("<li><a href=\"?"+field+"="+i[1].replace("&", "%26").replace("%27", "'").replace("%22", '"')+"\" >"+i[1]+"</a></li>");
         });
-	}else {
-                $("#"+id+"_list").find('img').remove();
-		$("#"+id+"_list").text("No results");
 	}
     })
 }
 
 
 
-function select_input(id, url, model, fields, filter_query, exclude_query, min_length, callback){
+function select_input(id, url, model, field, filter_query, exclude_query, min_length, callback){
 	if ($("#" + id + "_add").val().length > min_length - 1){
         	$("#" + id + "_add"+"_list").empty();
-		var field_arr = fields.split(',');
-		for (field in field_arr){
-			field_arr[field] = $.trim(field_arr[field]);
-		}
-		perform_request(id + "_add", url, model, field_arr.join(","), filter_query.replace('INPUT_VALUE', $("#" + id + "_add").val()).replace('FIELD_NAME', $.trim(fields)), exclude_query.replace('INPUT_VALUE', $("#"+ id + "_add").val()).replace('FIELD_NAME', $.trim(fields)), callback);
+            	var fields = field.split(',');
+            	fields.forEach(function(field) {
+			perform_request(id + "_add", url, model, $.trim(field), filter_query.replace('INPUT_VALUE', $("#" + id + "_add").val()).replace('FIELD_NAME', $.trim(field)), exclude_query.replace('INPUT_VALUE', $("#"+ id + "_add").val()).replace('FIELD_NAME', $.trim(field)), callback);
+            	});
         }
 }
 
