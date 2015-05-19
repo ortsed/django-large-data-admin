@@ -39,17 +39,16 @@ def get_json(request):
 
     if unique:
         try:  # XXX: needs prety check if DISTINCT is available, ticket #3
-            return HttpResponse(json.dumps(list(qs.distinct(field).values_list("pk", field).order_by(field))))
+            return HttpResponse(json.dumps(list(qs.distinct(*fields).values_list("pk", *fields).order_by(fields[0]))))
         except NotImplementedError:
             data = []
             unique_by_field = []
-            for pk, field_value in list(qs.values_list("pk", field)):
-                if field_value not in unique_by_field:
-                    data.append((pk, field_value))
-                unique_by_field.append(field_value)
+            for val in list(qs.values_list("pk", *fields)):
+                if val not in unique_by_field:
+                    data.append((val))
+                unique_by_field.append(val)
             return HttpResponse(json.dumps(data))
-
-    return HttpResponse(json.dumps(list(qs.values_list("pk", fields))))
+    return HttpResponse(json.dumps(list(qs.values_list("pk", *fields))))
 
 def m2m_list_view(request, model_str):
     pks = [int(pk) for pk in filter(None, request.GET.get("q", "").split(","))]
